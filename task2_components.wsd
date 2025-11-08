@@ -1,0 +1,22 @@
+@startuml c4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+System_Boundary(house, "WarmHouse") {
+    Container(deviceService, "DeviceService", "Node.js", "Управляет устройствами, отправляет команды через MQTT")
+    Container(telemetryService, "TelemetryService", "Node.js", "Принимает телеметрию от устройств, сохраняет и отдаёт историю данных")
+    Container(userService, "UserService", "Node.js", "Управляет аккаунтами пользователей")
+    Container(authService, "AuthService", "Node.js", "Аутентификация и авторизация")
+    ContainerDb(db, "DB", "PostgreSQL", "Хранит устройства, телеметрию и пользователей")
+    Container(mqttBroker, "MQTT Broker", "EMQX / Mosquitto", "Передаёт телеметрию и команды")
+}
+
+Rel(mqttBroker, telemetryService, "Передаёт данные телеметрии", "MQTT")
+Rel(deviceService, mqttBroker, "Отправляет команды устройствам", "MQTT")
+Rel(deviceService, db, "Читает/записывает устройства", "SQL")
+Rel(telemetryService, db, "Записывает телеметрию", "SQL")
+Rel(deviceService, authService, "Проверяет токен", "REST")
+Rel(userService, authService, "Авторизация", "REST")
+Rel(userService, deviceService, "Управляет своими устройствами", "REST")
+Rel(userService, db, "Читает пользователей", "SQL")
+
+@enduml

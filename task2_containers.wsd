@@ -1,0 +1,21 @@
+@startuml c4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "Пользователь", "Пользователь")
+
+Container(device, "Датчик", "устройство")
+
+System_Boundary(house, "WarmHouse") {
+    Container(mobile, "Mobile Application", "Swift", "Содержит функционал для управления устройствами и аккаунтом пользователя")
+    Container(gateway, "IoT Gateway", "Broker", "Принимает данные от устройств и маршрутизирует команды между устройствами и API.")
+    Container(api, "Api Application", "Nodes.js", "Содержит всю текущую бизнес логику")
+    ContainerDb(db, "Database", "PostgreSQL", "Содержит данные об устройствах и пользователях")
+}
+Rel_D(user, mobile, "Управляет умным домом и своим аккаунтом")
+Rel(device, gateway, "Отправляет телеметрию и получает команды", "MQTT Broker")
+Rel(gateway, api, "Передаёт данные устройств и команды управления", "REST")
+
+Rel_D(mobile, api, "Отправляет апи запросы", "REST")
+
+Rel_R(api, db, "Читает/записывает данные", "SQL")
+@enduml

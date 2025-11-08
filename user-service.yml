@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: WarmHouse User Service API
+  version: 1.0.0
+  description: >
+    API для работы с профилем пользователя (просмотр и обновление данных)
+
+servers:
+  - url: https://api.warmhouse.com/user
+    description: Production
+  - url: http://localhost:3001
+    description: Local
+
+tags:
+  - name: User
+    description: Работа с профилем пользователя
+
+paths:
+  /:
+    get:
+      summary: Получить данные текущего пользователя
+      operationId: getUser
+      tags: [User]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Текущий пользователь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    patch:
+      summary: Обновить данные текущего пользователя
+      operationId: updateUser
+      tags: [User]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Обновлённый пользователь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        createdAt: { type: string, format: date-time }
+      required: [id, name, email]
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        name: { type: string, example: "Alex" }
+        email: { type: string, example: "alex@example.com" }
