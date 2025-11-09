@@ -1,22 +1,16 @@
 @startuml c4
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-System_Boundary(house, "WarmHouse") {
-    Container(deviceService, "DeviceService", "Node.js", "Управляет устройствами, отправляет команды через MQTT")
-    Container(telemetryService, "TelemetryService", "Node.js", "Принимает телеметрию от устройств, сохраняет и отдаёт историю данных")
-    Container(userService, "UserService", "Node.js", "Управляет аккаунтами пользователей")
-    Container(authService, "AuthService", "Node.js", "Аутентификация и авторизация")
-    ContainerDb(db, "DB", "PostgreSQL", "Хранит устройства, телеметрию и пользователей")
-    Container(mqttBroker, "MQTT Broker", "EMQX / Mosquitto", "Передаёт телеметрию и команды")
+Container_Boundary(telemetryService, "Telemetry Service") {
+    Component(apiHandler, "API Handler", "Node.js", "Обрабатывает REST-запросы для получения данных телеметрии")
+    Component(mqttConsumer, "MQTT Consumer", "MQTT", "Подписывается на топики и принимает данные от устройств")
+    Component(dataProcessor, "Data Processor", "Node.js", "Проверяет и нормализует данные телеметрии")
+    Component(repository, "Telemetry Repository", "DAO", "Сохраняет и извлекает данные из хранилища")
+    Component(messageProducer, "Message Producer", "Publisher", "Отправляет уведомления или события в очередь (например, Kafka / RabbitMQ)")
 }
 
-Rel(mqttBroker, telemetryService, "Передаёт данные телеметрии", "MQTT")
-Rel(deviceService, mqttBroker, "Отправляет команды устройствам", "MQTT")
-Rel(deviceService, db, "Читает/записывает устройства", "SQL")
-Rel(telemetryService, db, "Записывает телеметрию", "SQL")
-Rel(deviceService, authService, "Проверяет токен", "REST")
-Rel(userService, authService, "Авторизация", "REST")
-Rel(userService, deviceService, "Управляет своими устройствами", "REST")
-Rel(userService, db, "Читает пользователей", "SQL")
-
+Rel(apiHandler, repository, "Запрашивает данные телеметрии")
+Rel(mqttConsumer, dataProcessor, "Передаёт сырые данные")
+Rel(dataProcessor, repository, "Сохраняет нормализованные данные")
+Rel(dataProcessor, messageProducer, "Публикует события")
 @enduml
