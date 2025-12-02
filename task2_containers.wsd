@@ -1,0 +1,36 @@
+@startuml c4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "Пользователь", "Использует мобильное приложение для управления домом")
+
+System_Boundary(house, "WarmHouse System") {
+    Container(mobileApp, "Mobile Application", "Swift", "Управляет устройствами и профилем пользователя")
+    Container(apiGateway, "API Gateway", "Node.js", "Маршрутизирует запросы к микросервисам и обеспечивает авторизацию")
+    
+    Container(authService, "Auth Service", "Node.js", "Отвечает за аутентификацию, refresh-токены и проверку JWT")
+    Container(userService, "User Service", "Node.js", "Управляет пользователями, профилями и связью с устройствами")
+    Container(deviceService, "Device Service", "Node.js", "Управляет устройствами, отправляет команды, синхронизирует состояния")
+    Container(telemetryService, "Telemetry Service", "Node.js", "Собирает и хранит телеметрию устройств")
+    
+    Container(mqttBroker, "MQTT Broker", "Mosquitto", "Передаёт телеметрию и команды между устройствами и сервисами")
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL", "Реляционные данные: пользователи, устройства, авторизация")
+    ContainerDb(timeseriesDB, "TimeSeries DB", "MongoDB", "Хранит исторические данные телеметрии")
+}
+
+Rel(user, mobileApp, "Управляет умным домом и аккаунтом")
+Rel(mobileApp, apiGateway, "Отправляет запросы", "REST")
+
+Rel(apiGateway, authService, "Запросы авторизации", "REST")
+Rel(apiGateway, userService, "Маршрутизация пользовательских операций", "REST")
+Rel(apiGateway, deviceService, "Маршрутизация команд устройств", "REST")
+Rel(apiGateway, telemetryService, "Доступ к телеметрии", "REST")
+
+Rel(deviceService, mqttBroker, "Публикует команды", "MQTT")
+Rel(mqttBroker, telemetryService, "Передаёт телеметрию", "MQTT")
+
+Rel(telemetryService, timeseriesDB, "Хранит телеметрию", "NoSQL")
+Rel(userService, postgres, "Хранит пользователей", "SQL")
+Rel(deviceService, postgres, "Хранит устройства", "SQL")
+Rel(authService, postgres, "Хранит токены и сессии", "SQL")
+
+@enduml

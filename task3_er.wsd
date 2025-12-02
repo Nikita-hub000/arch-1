@@ -1,0 +1,32 @@
+@startuml
+
+entity "User" as u {
+  *id : UUID
+  name : string
+  email : string
+  passwordHash : string
+  createdAt : datetime
+}
+
+entity "Device" as d {
+  *id : UUID
+  name : string
+  type : string
+  status : string
+  settings : JSON
+  ownerId : UUID
+  createdAt : datetime
+  lastUpdated: datetime
+  room: string
+}
+
+entity "Telemetry" as t {
+  *id : UUID
+  deviceId : UUID
+  timestamp : datetime
+  payload : JSON
+}
+
+u ||--o{ d : owns >
+d ||--o{ t : "produces >"
+@enduml

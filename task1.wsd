@@ -1,0 +1,19 @@
+@startuml c4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "Пользователь", "Пользователь")
+Person(technic, "Техник", "Техник по обслуживанию устройств")
+
+Container(device, "Датчик температуры", "устройство")
+
+System_Boundary(house, "WarmHouse") {
+    Container(api, "Backend", "Go", "Содержит всю текущую бизнес логику")
+    ContainerDb(db, "Database", "PostgreSQL", "Содержит данные об устройствах")
+}
+Rel_D(user, house, "Управление отоплением.", "HTTP")
+Rel_D(user, house, "Мониторинг температуры.", "HTTP")
+Rel_R(technic, device, "Настраивает датчик", "Ручное управление")
+
+Rel_U(device, house, "Отправляет данные о температуре.", "HTTP")
+Rel_R(api, db, "Читает/записывает данные", "SQL")
+@enduml

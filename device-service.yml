@@ -1,0 +1,150 @@
+openapi: 3.0.3
+info:
+  title: WarmHouse Device Service API
+  version: 1.0.0
+  description: >
+    API для управления устройствами пользователя (CRUD и регистрация)
+
+servers:
+  - url: https://api.warmhouse.com/device
+    description: Production
+  - url: http://localhost:3003
+    description: Local
+
+tags:
+  - name: Devices
+    description: Управление устройствами пользователя
+
+paths:
+  /:
+    get:
+      summary: Получить список устройств пользователя
+      operationId: getDevices
+      tags: [Devices]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список устройств
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+
+    post:
+      summary: Зарегистрировать новое устройство
+      operationId: createDevice
+      tags: [Devices]
+      description: >
+        Регистрирует устройство после локального связывания (по Wi-Fi/Bluetooth).
+        Принимает уникальный идентификатор устройства и метаданные.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDeviceRequest'
+      responses:
+        '201':
+          description: Устройство успешно зарегистрировано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+  /{id}:
+    patch:
+      summary: Обновить данные устройства
+      operationId: updateDevice
+      tags: [Devices]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: ID устройства
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDeviceRequest'
+      responses:
+        '200':
+          description: Обновлённое устройство
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+    delete:
+      summary: Удалить устройство
+      operationId: deleteDevice
+      tags: [Devices]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Устройство удалено
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Device:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status:
+          type: string
+          enum: [active, inactive, offline]
+        type: { type: string }
+        settings: { type: object }
+        createdAt: { type: string, format: date-time }
+      required: [id, name, status]
+
+    CreateDeviceRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          description: Уникальный идентификатор физического устройства
+          example: "thermo-1a2b3c"
+        name:
+          type: string
+          example: "Термостат в гостиной"
+        type:
+          type: string
+          example: "thermostat"
+        settings:
+          type: object
+          example:
+            temperatureTarget: 22
+            mode: auto
+      required: [deviceId, name, type]
+
+    UpdateDeviceRequest:
+      type: object
+      properties:
+        name: { type: string }
+        settings: { type: object }
+      example:
+        name: "Обновлённый термостат"
+        settings:
+          mode: manual

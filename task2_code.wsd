@@ -1,0 +1,57 @@
+@startuml DeviceService Code Diagram
+
+package "Controllers" {
+  class DeviceController {
+    +registerDevice(dto)
+    +updateStatus(id, status)
+    +updateSettings(id, settings)
+    +getDeviceById(id)
+  }
+}
+
+package "Services" {
+  class DeviceService {
+    +register(dto)
+    +updateSettings(id, settings)
+    +updateStatus(id, status)
+    +getById(id)
+  }
+}
+
+package "Repositories" {
+  class DeviceRepository {
+    +save(device)
+    +findById(id)
+    +updateStatus(id, status)
+    +updateSettings(id, settings)
+  }
+}
+
+package "Entities" {
+  class Device {
+    -id: UUID
+    -name: string
+    -status: string
+    -type: string
+    -createdAt: Date
+    -ownerId : UUID
+    -room: string
+    -lastUpdated: Date
+    -settings: JSON
+    +activate()
+    +deactivate()
+    +changeStatus(status)
+  }
+}
+
+package "Infrastructure" {
+  class MqttPublisher {
+    +publishDeviceStatus(device)
+  }
+}
+
+DeviceController --> DeviceService : calls
+DeviceService --> DeviceRepository : reads/writes data
+DeviceService --> MqttPublisher : publishes updates
+DeviceRepository --> Device : maps DB rows
+@enduml

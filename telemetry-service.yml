@@ -1,0 +1,139 @@
+openapi: 3.0.3
+info:
+  title: WarmHouse Telemetry Service API
+  version: 1.0.0
+  description: >
+    API для приёма и получения телеметрии устройств (температура, состояние, уровень и т.д.)
+
+servers:
+  - url: https://api.warmhouse.com/telemetry
+    description: Production
+  - url: http://localhost:3004
+    description: Local
+
+tags:
+  - name: Telemetry
+    description: Данные телеметрии от устройств
+
+paths:
+  /:
+    post:
+      summary: Принять телеметрию от устройства
+      operationId: createTelemetry
+      tags: [Telemetry]
+      description: >
+        Внутренний эндпоинт — вызывается брокером или DeviceService.
+        Принимает массив записей телеметрии от устройств.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TelemetryRecord'
+      responses:
+        '201':
+          description: Телеметрия успешно сохранена
+
+  /{deviceId}:
+    get:
+      summary: Получить последние показания устройства
+      operationId: getTelemetry
+      tags: [Telemetry]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: string
+            example: "thermo-1a2b3c"
+          description: Уникальный идентификатор устройства
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 50
+            description: Максимальное количество записей
+      responses:
+        '200':
+          description: Список телеметрии
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryRecord'
+
+  /{deviceId}/range:
+    get:
+      summary: Получить телеметрию за период
+      operationId: getTelemetryRange
+      tags: [Telemetry]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: string
+            example: "thermo-1a2b3c"
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2025-11-01T00:00:00Z"
+          description: Начало диапазона
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2025-11-07T23:59:59Z"
+          description: Конец диапазона
+      responses:
+        '200':
+          description: Телеметрия за указанный период
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryRecord'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TelemetryRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "uuid-123"
+        deviceId:
+          type: string
+          example: "thermo-1a2b3c"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-11-07T18:45:00Z"
+        payload:
+          type: object
+          additionalProperties: true
+          example:
+            temperature: 22.4
+            humidity: 46
+            power: true
+      required: [deviceId, timestamp, payload]

@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: WarmHouse Auth Service API
+  version: 1.0.0
+  description: >
+    API для аутентификации и авторизации пользователей (signup, signin, resetPassword)
+
+servers:
+  - url: https://api.warmhouse.com/auth
+    description: Production
+  - url: http://localhost:3002
+    description: Local
+
+tags:
+  - name: Auth
+    description: Регистрация, вход и сброс пароля
+
+paths:
+  /signup:
+    post:
+      summary: Регистрация нового пользователя
+      operationId: signup
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /signin:
+    post:
+      summary: Авторизация пользователя
+      operationId: signin
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigninRequest'
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /reset-password:
+    post:
+      summary: Сброс пароля
+      operationId: resetPassword
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Письмо для восстановления пароля отправлено
+
+components:
+  schemas:
+    SignupRequest:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        password: { type: string }
+      required: [email, password]
+
+    SigninRequest:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+      required: [email, password]
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        email: { type: string }
+        newPassword: { type: string }
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        user:
+          type: object
+          properties:
+            id: { type: string }
+            email: { type: string }
+            name: { type: string }
